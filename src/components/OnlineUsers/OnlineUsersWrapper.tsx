@@ -1,7 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import OnlineUser from "./OnlineUser";
+import gql from "graphql-tag";
+import { useMutation } from "@apollo/react-hooks";
+
+const UPDATE_LASTSEEN_MUTATION = gql`
+   mutation updateLastSeen ($now: timestamptz!) {
+     update_users(where: {}, _set: {last_seen: $now}) {
+       affected_rows
+     }
+   }
+ `;
 
 const OnlineUsersWrapper = () => {
+
+  const [updateLastSeen] = useMutation(UPDATE_LASTSEEN_MUTATION);
+
+  useEffect(() => {
+    const onlineIndicator = setInterval(() => updateLastSeen({ variables: { now: (new Date()).toISOString() } }), 30000);
+    return () => clearInterval(onlineIndicator);
+  });
 
   const online_users = [
     { name: "someUser1" },
