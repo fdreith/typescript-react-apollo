@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GetMyTodosQuery, Todos, ToggleTodoMutation, ToggleTodoMutationVariables } from '../../generated/graphql';
+import { GetMyTodosQuery, Todos } from '../../generated/graphql';
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 import { GET_MY_TODOS } from './TodoPrivateList';
@@ -24,8 +24,17 @@ const TOGGLE_TODO = gql`
    }
  `;
 
+const REMOVE_TODO = gql`
+   mutation removeTodo ($id: Int!) {
+     delete_todos(where: {id: {_eq: $id}}) {
+       affected_rows
+     }
+   }
+ `;
+
 const TodoItem = ({ index, todo }: TodoItemType) => {
-  const [todoUpdate] = useMutation<ToggleTodoMutation, ToggleTodoMutationVariables>(
+
+  const [todoUpdate] = useMutation<any>(
     TOGGLE_TODO,
     {
       update(cache, { data }) {
@@ -45,9 +54,26 @@ const TodoItem = ({ index, todo }: TodoItemType) => {
     }
   );
 
+  const [todoRemove] = useMutation<any>(
+    REMOVE_TODO,
+    {
+      update(cache, { data }) {
+        const existingTodos = cache.readQuery<GetMyTodosQuery>({ query: GET_MY_TODOS });
+        const newTodos = existingTodos!.todos.filter(t => (t.id !== todo.id));
+        cache.writeQuery<GetMyTodosQuery>({
+          query: GET_MY_TODOS,
+          data: { todos: newTodos }
+        });
+      }
+    }
+  );
+
   const removeTodo = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    todoRemove({
+      variables: { id: todo.id },
+    });
   };
 
   const toggleTodo = () => {
@@ -81,7 +107,7 @@ const TodoItem = ({ index, todo }: TodoItemType) => {
             id={todo.id!.toString()}
             onChange={() => toggleTodo()}
           />
-          <label htmlFor={todo.id!.toString()}/>
+          <label htmlFor={todo.id!.toString()} />
         </div>
       </div>
 
