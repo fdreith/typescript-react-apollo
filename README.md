@@ -1,5 +1,7 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+https://hasura.io/learn/graphql/typescript-react-apollo/what-next/
+
 ## Available Scripts
 
 In the project directory, you can run:
